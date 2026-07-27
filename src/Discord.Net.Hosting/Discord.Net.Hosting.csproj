@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Discord.Net.targets" />
+  <Import Project="../../StyleAnalyzer.targets" />
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <RootNamespace>Discord.Hosting</RootNamespace>
+    <AssemblyName>Discord.Net.Hosting</AssemblyName>
+    <Description>Generic Host integration for Discord.Net gateway clients.</Description>
+    <WarningLevel>5</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsTrimmable>false</IsTrimmable>
+    <IsAotCompatible>false</IsAotCompatible>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Discord.Net.WebSocket/Discord.Net.WebSocket.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

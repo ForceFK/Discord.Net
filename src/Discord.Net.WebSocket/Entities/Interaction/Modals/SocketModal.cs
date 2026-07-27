@@ -373,7 +373,7 @@ namespace Discord.WebSocket
                 Poll = poll?.ToModel() ?? Optional<CreatePollParams>.Unspecified
             };
 
-            return InteractionHelper.SendFollowupAsync(Discord.Rest, args, Token, Channel, options);
+            return InteractionHelper.SendFollowupAsync(Discord.Rest, args, ApplicationId, Token, Channel, options);
         }
 
         /// <inheritdoc/>
@@ -440,7 +440,7 @@ namespace Discord.WebSocket
                 MessageComponents = components?.Components.Select(x => x.ToModel()).ToArray() ?? Optional<IMessageComponent[]>.Unspecified,
                 Poll = poll?.ToModel() ?? Optional<CreatePollParams>.Unspecified
             };
-            return InteractionHelper.SendFollowupAsync(Discord, args, Token, Channel, options);
+            return InteractionHelper.SendFollowupAsync(Discord, args, ApplicationId, Token, Channel, options);
         }
 
         /// <inheritdoc/>

@@ -440,8 +440,8 @@ namespace Discord.WebSocket
         /// <returns>A <see cref="RestInteractionMessage"/> that represents the initial response.</returns>
         public async Task<RestInteractionMessage> ModifyOriginalResponseAsync(Action<MessageProperties> func, RequestOptions options = null)
         {
-            var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, Token, func, options);
-            return RestInteractionMessage.Create(Discord, model, Token, Channel);
+            var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, ApplicationId, Token, func, options);
+            return RestInteractionMessage.Create(Discord, model, ApplicationId, Token, Channel);
         }
 
         /// <inheritdoc/>

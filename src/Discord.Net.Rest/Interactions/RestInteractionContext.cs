@@ -45,7 +45,17 @@ namespace Discord.Rest
         /// <remarks>
         ///     If this property is <see langword="null"/> the default callback will be used.
         /// </remarks>
-        public Func<string, Task> InteractionResponseCallback { get; set; }
+        public Func<string, Task> InteractionResponseCallback
+        {
+            get => _interactionResponseCallback;
+            set
+            {
+                _interactionResponseCallback = value;
+                Interaction.SetInteractionResponseCallback(value);
+            }
+        }
+
+        private Func<string, Task> _interactionResponseCallback;
 
         /// <inheritdoc cref="IRouteMatchContainer.SegmentMatches"/>
         public IReadOnlyCollection<IRouteSegmentMatch> SegmentMatches { get; private set; }

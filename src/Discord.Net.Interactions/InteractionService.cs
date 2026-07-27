@@ -760,7 +760,7 @@ namespace Discord.Interactions
         ///     The search result. When successful, result contains the found <see cref="ContextCommandInfo"/>.
         /// </returns>
         public SearchResult<ContextCommandInfo> SearchUserCommand(IUserCommandInteraction userCommandInteraction)
-            => _contextCommandMaps[ApplicationCommandType.User].GetCommand(userCommandInteraction.Data.Name);
+            => SearchContextCommand(userCommandInteraction.Data.Name, ApplicationCommandType.User);
 
         /// <summary>
         ///     Search the registered slash commands using a <see cref="IMessageCommandInteraction"/>.
@@ -770,7 +770,13 @@ namespace Discord.Interactions
         ///     The search result. When successful, result contains the found <see cref="ContextCommandInfo"/>.
         /// </returns>
         public SearchResult<ContextCommandInfo> SearchMessageCommand(IMessageCommandInteraction messageCommandInteraction)
-            => _contextCommandMaps[ApplicationCommandType.Message].GetCommand(messageCommandInteraction.Data.Name);
+            => SearchContextCommand(messageCommandInteraction.Data.Name, ApplicationCommandType.Message);
+
+        private SearchResult<ContextCommandInfo> SearchContextCommand(string input, ApplicationCommandType commandType)
+            => _contextCommandMaps.TryGetValue(commandType, out var map)
+                ? map.GetCommand(input)
+                : SearchResult<ContextCommandInfo>.FromError(input, InteractionCommandError.UnknownCommand,
+                    $"No {commandType} command found.");
 
         /// <summary>
         ///     Search the registered slash commands using a <see cref="IAutocompleteInteraction"/>.
@@ -785,6 +791,14 @@ namespace Discord.Interactions
             keywords.Add(autocompleteInteraction.Data.Current.Name);
             return _autocompleteCommandMap.GetCommand(keywords);
         }
+
+        /// <summary>
+        ///     Searches the registered modal commands using a <see cref="IModalInteraction"/>.
+        /// </summary>
+        /// <param name="modalInteraction">Interaction entity to perform the search with.</param>
+        /// <returns>The modal command search result.</returns>
+        public SearchResult<ModalCommandInfo> SearchModalCommand(IModalInteraction modalInteraction)
+            => _modalCommandMap.GetCommand(modalInteraction.Data.CustomId);
 
         /// <summary>
         ///     Execute a Command from a given <see cref="IInteractionContext"/>.
@@ -829,7 +843,13 @@ namespace Discord.Interactions
         private async Task<IResult> ExecuteContextCommandAsync(IInteractionContext context, string input, ApplicationCommandType commandType, IServiceProvider services)
         {
             if (!_contextCommandMaps.TryGetValue(commandType, out var map))
-                return SearchResult<ContextCommandInfo>.FromError(input, InteractionCommandError.UnknownCommand, $"No {commandType} command found.");
+            {
+                var missingMapResult = SearchResult<ContextCommandInfo>.FromError(input,
+                    InteractionCommandError.UnknownCommand, $"No {commandType} command found.");
+                await _cmdLogger.DebugAsync($"Unknown context command, skipping execution ({input.ToUpper()})");
+                await _contextCommandExecutedEvent.InvokeAsync(null, context, missingMapResult).ConfigureAwait(false);
+                return missingMapResult;
+            }
 
             var result = map.GetCommand(input);
 

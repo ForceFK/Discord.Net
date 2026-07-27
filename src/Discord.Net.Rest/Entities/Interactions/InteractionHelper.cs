@@ -46,27 +46,27 @@ namespace Discord.Rest
         public static async Task<RestInteractionMessage> GetOriginalResponseAsync(BaseDiscordClient client, IMessageChannel channel,
             IDiscordInteraction interaction, RequestOptions options = null)
         {
-            var model = await client.ApiClient.GetInteractionResponseAsync(interaction.Token, options).ConfigureAwait(false);
+            var model = await client.ApiClient.GetInteractionResponseAsync(interaction.ApplicationId, interaction.Token, options).ConfigureAwait(false);
             if (model != null)
-                return RestInteractionMessage.Create(client, model, interaction.Token, channel);
+                return RestInteractionMessage.Create(client, model, interaction.ApplicationId, interaction.Token, channel);
             return null;
         }
 
         public static async Task<RestFollowupMessage> SendFollowupAsync(BaseDiscordClient client, CreateWebhookMessageParams args,
-            string token, IMessageChannel channel, RequestOptions options = null)
+            ulong applicationId, string token, IMessageChannel channel, RequestOptions options = null)
         {
-            var model = await client.ApiClient.CreateInteractionFollowupMessageAsync(args, token, options).ConfigureAwait(false);
+            var model = await client.ApiClient.CreateInteractionFollowupMessageAsync(args, applicationId, token, options).ConfigureAwait(false);
 
-            var entity = RestFollowupMessage.Create(client, model, token, channel);
+            var entity = RestFollowupMessage.Create(client, model, applicationId, token, channel);
             return entity;
         }
 
         public static async Task<RestFollowupMessage> SendFollowupAsync(BaseDiscordClient client, UploadWebhookFileParams args,
-           string token, IMessageChannel channel, RequestOptions options = null)
+           ulong applicationId, string token, IMessageChannel channel, RequestOptions options = null)
         {
-            var model = await client.ApiClient.CreateInteractionFollowupMessageAsync(args, token, options).ConfigureAwait(false);
+            var model = await client.ApiClient.CreateInteractionFollowupMessageAsync(args, applicationId, token, options).ConfigureAwait(false);
 
-            var entity = RestFollowupMessage.Create(client, model, token, channel);
+            var entity = RestFollowupMessage.Create(client, model, applicationId, token, channel);
             return entity;
         }
         #endregion
@@ -435,13 +435,13 @@ namespace Discord.Rest
                 Flags = args.Flags
             };
 
-            return client.ApiClient.ModifyInteractionFollowupMessageAsync(apiArgs, message.Id, message.Token, options);
+            return client.ApiClient.ModifyInteractionFollowupMessageAsync(apiArgs, message.ApplicationId, message.Id, message.Token, options);
         }
 
         public static Task DeleteFollowupMessageAsync(BaseDiscordClient client, RestFollowupMessage message, RequestOptions options = null)
-            => client.ApiClient.DeleteInteractionFollowupMessageAsync(message.Id, message.Token, options);
+            => client.ApiClient.DeleteInteractionFollowupMessageAsync(message.ApplicationId, message.Id, message.Token, options);
 
-        public static Task<API.Message> ModifyInteractionResponseAsync(BaseDiscordClient client, string token, Action<MessageProperties> func,
+        public static Task<API.Message> ModifyInteractionResponseAsync(BaseDiscordClient client, ulong applicationId, string token, Action<MessageProperties> func,
            RequestOptions options = null)
         {
             var args = new MessageProperties();
@@ -483,7 +483,7 @@ namespace Discord.Rest
                     Flags = args.Flags
                 };
 
-                return client.ApiClient.ModifyInteractionResponseAsync(apiArgs, token, options);
+                return client.ApiClient.ModifyInteractionResponseAsync(apiArgs, applicationId, token, options);
             }
             else
             {
@@ -501,15 +501,15 @@ namespace Discord.Rest
                         : Optional<MessageFlags>.Unspecified
                 };
 
-                return client.ApiClient.ModifyInteractionResponseAsync(apiArgs, token, options);
+                return client.ApiClient.ModifyInteractionResponseAsync(apiArgs, applicationId, token, options);
             }
         }
 
         public static Task DeleteInteractionResponseAsync(BaseDiscordClient client, RestInteractionMessage message, RequestOptions options = null)
-            => client.ApiClient.DeleteInteractionResponseAsync(message.Token, options);
+            => client.ApiClient.DeleteInteractionResponseAsync(message.ApplicationId, message.Token, options);
 
         public static Task DeleteInteractionResponseAsync(BaseDiscordClient client, IDiscordInteraction interaction, RequestOptions options = null)
-            => client.ApiClient.DeleteInteractionResponseAsync(interaction.Token, options);
+            => client.ApiClient.DeleteInteractionResponseAsync(interaction.ApplicationId, interaction.Token, options);
 
         public static Task SendAutocompleteResultAsync(BaseDiscordClient client, IEnumerable<AutocompleteResult> result, ulong interactionId,
             string interactionToken, RequestOptions options)

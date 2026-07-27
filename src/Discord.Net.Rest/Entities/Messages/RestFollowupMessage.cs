@@ -11,16 +11,18 @@ namespace Discord.Rest
     {
         // Token used to delete/modify this followup message
         internal string Token { get; }
+        internal ulong ApplicationId { get; }
 
-        internal RestFollowupMessage(BaseDiscordClient discord, ulong id, IUser author, string token, IMessageChannel channel)
+        internal RestFollowupMessage(BaseDiscordClient discord, ulong id, IUser author, ulong applicationId, string token, IMessageChannel channel)
             : base(discord, id, channel, author, MessageSource.Bot)
         {
+            ApplicationId = applicationId;
             Token = token;
         }
 
-        internal static RestFollowupMessage Create(BaseDiscordClient discord, Model model, string token, IMessageChannel channel)
+        internal static RestFollowupMessage Create(BaseDiscordClient discord, Model model, ulong applicationId, string token, IMessageChannel channel)
         {
-            var entity = new RestFollowupMessage(discord, model.Id, model.Author.IsSpecified ? RestUser.Create(discord, model.Author.Value) : discord.CurrentUser, token, channel);
+            var entity = new RestFollowupMessage(discord, model.Id, model.Author.IsSpecified ? RestUser.Create(discord, model.Author.Value) : discord.CurrentUser, applicationId, token, channel);
             entity.Update(model);
             return entity;
         }

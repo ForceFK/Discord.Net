@@ -173,7 +173,7 @@ namespace Discord.Rest
                         : flags,
             };
 
-            return InteractionHelper.SendFollowupAsync(Discord, args, Token, Channel, options);
+            return InteractionHelper.SendFollowupAsync(Discord, args, ApplicationId, Token, Channel, options);
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace Discord.Rest
                         : flags,
             };
 
-            return InteractionHelper.SendFollowupAsync(Discord, args, Token, Channel, options);
+            return InteractionHelper.SendFollowupAsync(Discord, args, ApplicationId, Token, Channel, options);
         }
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace Discord.Rest
                         : flags,
             };
 
-            return await InteractionHelper.SendFollowupAsync(Discord, args, Token, Channel, options);
+            return await InteractionHelper.SendFollowupAsync(Discord, args, ApplicationId, Token, Channel, options);
         }
 
         /// <summary>
@@ -338,6 +338,9 @@ namespace Discord.Rest
 
             if (!InteractionHelper.CanSendResponse(this) && Discord.ResponseInternalTimeCheck)
                 throw new TimeoutException($"Cannot respond to an interaction after {InteractionHelper.ResponseTimeLimit} seconds!");
+
+            Preconditions.AtMost(text?.Length ?? 0, DiscordConfig.MaxMessageSize, nameof(text),
+                $"Message content is too long, length must be less or equal to {DiscordConfig.MaxMessageSize}.");
 
             embeds ??= [];
             if (embed != null)
@@ -460,7 +463,7 @@ namespace Discord.Rest
                 MessageComponents = components?.Components.Select(x => x.ToModel()).ToArray() ?? Optional<IMessageComponent[]>.Unspecified,
                 Poll = poll?.ToModel() ?? Optional<API.Rest.CreatePollParams>.Unspecified
             };
-            return InteractionHelper.SendFollowupAsync(Discord, args, Token, Channel, options);
+            return InteractionHelper.SendFollowupAsync(Discord, args, ApplicationId, Token, Channel, options);
         }
 
         /// <inheritdoc/>

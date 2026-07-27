@@ -1,5 +1,6 @@
 using Discord.API.Rest;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace Discord.API
 {
@@ -18,7 +19,22 @@ namespace Discord.API
         public Optional<AllowedMentions> AllowedMentions { get; set; }
 
         [JsonProperty("flags")]
-        public Optional<MessageFlags> Flags { get; set; }
+        public Optional<MessageFlags> Flags
+        {
+            get
+            {
+                var flags = _flags.GetValueOrDefault(MessageFlags.None);
+                if (Components.IsSpecified && Components.Value?.Any(x => x.Type is not ComponentType.ActionRow) == true)
+                    flags |= MessageFlags.ComponentsV2;
+
+                return flags == MessageFlags.None && !_flags.IsSpecified
+                    ? Optional<MessageFlags>.Unspecified
+                    : flags;
+            }
+            set => _flags = value;
+        }
+
+        private Optional<MessageFlags> _flags;
 
         [JsonProperty("components")]
         public Optional<IMessageComponent[]> Components { get; set; }

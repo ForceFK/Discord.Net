@@ -1516,6 +1516,7 @@ namespace Discord.API
                 Preconditions.AtMost(response.Data.Value.Content.Value?.Length ?? 0, 2000, nameof(response.Data.Value.Content));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
             return SendJsonAsync("POST", () => $"interactions/{interactionId}/{interactionToken}/callback", response, new BucketIds(), options: options);
         }
@@ -1534,43 +1535,68 @@ namespace Discord.API
                 throw new ArgumentException(message: $"Message content is too long, length must be less or equal to {DiscordConfig.MaxMessageSize}.", paramName: nameof(response.Content));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
             var ids = new BucketIds();
             return SendMultipartAsync("POST", () => $"interactions/{interactionId}/{interactionToken}/callback", response.ToDictionary(), ids, clientBucket: ClientBucketType.SendEdit, options: options);
         }
 
         public Task<Message> GetInteractionResponseAsync(string interactionToken, RequestOptions options = null)
+            => GetInteractionResponseAsync(CurrentApplicationId.GetValueOrDefault(), interactionToken, options);
+
+        public Task<Message> GetInteractionResponseAsync(ulong applicationId, string interactionToken, RequestOptions options = null)
         {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
             Preconditions.NotNullOrEmpty(interactionToken, nameof(interactionToken));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
-            return NullifyNotFound(SendAsync<Message>("GET", () => $"webhooks/{CurrentApplicationId}/{interactionToken}/messages/@original", new BucketIds(), options: options));
+            return NullifyNotFound(SendAsync<Message>("GET", () => $"webhooks/{applicationId}/{interactionToken}/messages/@original", new BucketIds(), options: options));
         }
 
         public Task<Message> ModifyInteractionResponseAsync(ModifyInteractionResponseParams args, string interactionToken, RequestOptions options = null)
-        {
-            options = RequestOptions.CreateOrClone(options);
+            => ModifyInteractionResponseAsync(args, CurrentApplicationId.GetValueOrDefault(), interactionToken, options);
 
-            return SendJsonAsync<Message>("PATCH", () => $"webhooks/{CurrentApplicationId}/{interactionToken}/messages/@original", args, new BucketIds(), options: options);
+        public Task<Message> ModifyInteractionResponseAsync(ModifyInteractionResponseParams args, ulong applicationId, string interactionToken, RequestOptions options = null)
+        {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
+            options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
+
+            return SendJsonAsync<Message>("PATCH", () => $"webhooks/{applicationId}/{interactionToken}/messages/@original", args, new BucketIds(), options: options);
         }
 
         public Task<Message> ModifyInteractionResponseAsync(UploadWebhookFileParams args, string interactionToken, RequestOptions options = null)
-        {
-            options = RequestOptions.CreateOrClone(options);
+            => ModifyInteractionResponseAsync(args, CurrentApplicationId.GetValueOrDefault(), interactionToken, options);
 
-            return SendMultipartAsync<Message>("PATCH", () => $"webhooks/{CurrentApplicationId}/{interactionToken}/messages/@original", args.ToDictionary(), new BucketIds(), options: options);
+        public Task<Message> ModifyInteractionResponseAsync(UploadWebhookFileParams args, ulong applicationId, string interactionToken, RequestOptions options = null)
+        {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
+            options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
+
+            return SendMultipartAsync<Message>("PATCH", () => $"webhooks/{applicationId}/{interactionToken}/messages/@original", args.ToDictionary(), new BucketIds(), options: options);
         }
 
         public Task DeleteInteractionResponseAsync(string interactionToken, RequestOptions options = null)
-        {
-            options = RequestOptions.CreateOrClone(options);
+            => DeleteInteractionResponseAsync(CurrentApplicationId.GetValueOrDefault(), interactionToken, options);
 
-            return SendAsync("DELETE", () => $"webhooks/{CurrentApplicationId}/{interactionToken}/messages/@original", new BucketIds(), options: options);
+        public Task DeleteInteractionResponseAsync(ulong applicationId, string interactionToken, RequestOptions options = null)
+        {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
+            options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
+
+            return SendAsync("DELETE", () => $"webhooks/{applicationId}/{interactionToken}/messages/@original", new BucketIds(), options: options);
         }
 
         public Task<Message> CreateInteractionFollowupMessageAsync(CreateWebhookMessageParams args, string token, RequestOptions options = null)
+            => CreateInteractionFollowupMessageAsync(args, CurrentApplicationId.GetValueOrDefault(), token, options);
+
+        public Task<Message> CreateInteractionFollowupMessageAsync(CreateWebhookMessageParams args, ulong applicationId, string token, RequestOptions options = null)
         {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
             if ((!args.Embeds.IsSpecified || args.Embeds.Value == null || args.Embeds.Value.Length == 0)
                 && (!args.Content.IsSpecified || args.Content.Value is null || string.IsNullOrWhiteSpace(args.Content.Value))
                 && (!args.Components.IsSpecified || args.Components.Value is null || args.Components.Value.Length == 0)
@@ -1583,15 +1609,20 @@ namespace Discord.API
                 throw new ArgumentException(message: $"Message content is too long, length must be less or equal to {DiscordConfig.MaxMessageSize}.", paramName: nameof(args.Content));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
             if (!args.File.IsSpecified)
-                return SendJsonAsync<Message>("POST", () => $"webhooks/{CurrentApplicationId}/{token}?wait=true", args, new BucketIds(), options: options);
+                return SendJsonAsync<Message>("POST", () => $"webhooks/{applicationId}/{token}?wait=true", args, new BucketIds(), options: options);
             else
-                return SendMultipartAsync<Message>("POST", () => $"webhooks/{CurrentApplicationId}/{token}?wait=true", args.ToDictionary(), new BucketIds(), options: options);
+                return SendMultipartAsync<Message>("POST", () => $"webhooks/{applicationId}/{token}?wait=true", args.ToDictionary(), new BucketIds(), options: options);
         }
 
         public Task<Message> CreateInteractionFollowupMessageAsync(UploadWebhookFileParams args, string token, RequestOptions options = null)
+            => CreateInteractionFollowupMessageAsync(args, CurrentApplicationId.GetValueOrDefault(), token, options);
+
+        public Task<Message> CreateInteractionFollowupMessageAsync(UploadWebhookFileParams args, ulong applicationId, string token, RequestOptions options = null)
         {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
             if ((!args.Embeds.IsSpecified || args.Embeds.Value == null || args.Embeds.Value.Length == 0)
                 && (!args.Content.IsSpecified || args.Content.Value is null || string.IsNullOrWhiteSpace(args.Content.Value))
                 && (!args.MessageComponents.IsSpecified || args.MessageComponents.Value is null || args.MessageComponents.Value.Length == 0)
@@ -1603,31 +1634,42 @@ namespace Discord.API
                 throw new ArgumentException(message: $"Message content is too long, length must be less or equal to {DiscordConfig.MaxMessageSize}.", paramName: nameof(args.Content));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
             var ids = new BucketIds();
-            return SendMultipartAsync<Message>("POST", () => $"webhooks/{CurrentApplicationId}/{token}?wait=true", args.ToDictionary(), ids, clientBucket: ClientBucketType.SendEdit, options: options);
+            return SendMultipartAsync<Message>("POST", () => $"webhooks/{applicationId}/{token}?wait=true", args.ToDictionary(), ids, clientBucket: ClientBucketType.SendEdit, options: options);
         }
 
         public Task<Message> ModifyInteractionFollowupMessageAsync(ModifyInteractionResponseParams args, ulong id, string token, RequestOptions options = null)
+            => ModifyInteractionFollowupMessageAsync(args, CurrentApplicationId.GetValueOrDefault(), id, token, options);
+
+        public Task<Message> ModifyInteractionFollowupMessageAsync(ModifyInteractionResponseParams args, ulong applicationId, ulong id, string token, RequestOptions options = null)
         {
             Preconditions.NotNull(args, nameof(args));
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
             Preconditions.NotEqual(id, 0, nameof(id));
 
             if (args.Content.IsSpecified && args.Content.Value?.Length > DiscordConfig.MaxMessageSize)
                 throw new ArgumentException(message: $"Message content is too long, length must be less or equal to {DiscordConfig.MaxMessageSize}.", paramName: nameof(args.Content));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
-            return SendJsonAsync<Message>("PATCH", () => $"webhooks/{CurrentApplicationId}/{token}/messages/{id}", args, new BucketIds(), options: options);
+            return SendJsonAsync<Message>("PATCH", () => $"webhooks/{applicationId}/{token}/messages/{id}", args, new BucketIds(), options: options);
         }
 
         public Task DeleteInteractionFollowupMessageAsync(ulong id, string token, RequestOptions options = null)
+            => DeleteInteractionFollowupMessageAsync(CurrentApplicationId.GetValueOrDefault(), id, token, options);
+
+        public Task DeleteInteractionFollowupMessageAsync(ulong applicationId, ulong id, string token, RequestOptions options = null)
         {
+            Preconditions.NotEqual(applicationId, 0, nameof(applicationId));
             Preconditions.NotEqual(id, 0, nameof(id));
 
             options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true;
 
-            return SendAsync("DELETE", () => $"webhooks/{CurrentApplicationId}/{token}/messages/{id}", new BucketIds(), options: options);
+            return SendAsync("DELETE", () => $"webhooks/{applicationId}/{token}/messages/{id}", new BucketIds(), options: options);
         }
         #endregion
 

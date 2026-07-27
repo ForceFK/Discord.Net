@@ -20,6 +20,7 @@ namespace Discord.Rest
         // Added so channel & guild methods don't need a client reference
         private Func<RequestOptions, ulong, Task<IRestMessageChannel>> _getChannel;
         private Func<RequestOptions, ulong, Task<RestGuild>> _getGuild;
+        private Func<string, Task> _interactionResponseCallback;
 
         /// <inheritdoc/>
         public InteractionType Type { get; private set; }
@@ -83,6 +84,12 @@ namespace Discord.Rest
 
         /// <inheritdoc/>
         public bool HasResponded { get; protected set; }
+
+        internal void SetInteractionResponseCallback(Func<string, Task> callback)
+            => _interactionResponseCallback = callback;
+
+        internal Task SendInteractionResponseAsync(string payload)
+            => _interactionResponseCallback?.Invoke(payload) ?? Task.CompletedTask;
 
         /// <inheritdoc/>
         public bool IsDMInteraction { get; private set; }
@@ -188,7 +195,7 @@ namespace Discord.Rest
                 {
                     User = RestGuildUser.Create(Discord, Guild, model.Member.Value, GuildId);
                 }
-                else
+                else if (model.User.IsSpecified)
                 {
                     User = RestUser.Create(Discord, model.User.Value);
                 }
@@ -243,7 +250,8 @@ namespace Discord.Rest
                 ? model.GuildLocale.Value
                 : null;
 
-            Entitlements = model.Entitlements.Select(x => RestEntitlement.Create(discord, x)).ToImmutableArray();
+            Entitlements = (model.Entitlements ?? Array.Empty<API.Entitlement>())
+                .Select(x => RestEntitlement.Create(discord, x)).ToImmutableArray();
 
             IntegrationOwners = model.IntegrationOwners;
             ContextType = model.ContextType.IsSpecified
@@ -334,8 +342,8 @@ namespace Discord.Rest
         /// </returns>
         public async Task<RestInteractionMessage> ModifyOriginalResponseAsync(Action<MessageProperties> func, RequestOptions options = null)
         {
-            var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, Token, func, options);
-            return RestInteractionMessage.Create(Discord, model, Token, Channel);
+            var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, ApplicationId, Token, func, options);
+            return RestInteractionMessage.Create(Discord, model, ApplicationId, Token, Channel);
         }
         /// <inheritdoc/>
         public abstract string RespondWithModal(Modal modal, RequestOptions options = null);
@@ -463,13 +471,13 @@ namespace Discord.Rest
         /// <inheritdoc/>
         Task IDiscordInteraction.RespondAsync(string text, Embed[] embeds, bool isTTS, bool ephemeral, AllowedMentions allowedMentions,
             MessageComponent components, Embed embed, RequestOptions options, PollProperties poll, MessageFlags flags)
-            => Task.FromResult(Respond(text, embeds, isTTS, ephemeral, allowedMentions, components, embed, options, poll));
+            => SendInteractionResponseAsync(Respond(text, embeds, isTTS, ephemeral, allowedMentions, components, embed, options, poll));
         /// <inheritdoc/>
         Task IDiscordInteraction.DeferAsync(bool ephemeral, RequestOptions options)
-            => Task.FromResult(Defer(ephemeral, options));
+            => SendInteractionResponseAsync(Defer(ephemeral, options));
         /// <inheritdoc/>
         Task IDiscordInteraction.RespondWithModalAsync(Modal modal, RequestOptions options)
-            => Task.FromResult(RespondWithModal(modal, options));
+            => SendInteractionResponseAsync(RespondWithModal(modal, options));
 
         /// <inheritdoc/>
         async Task<IUserMessage> IDiscordInteraction.FollowupAsync(string text, Embed[] embeds, bool isTTS, bool ephemeral, AllowedMentions allowedMentions,

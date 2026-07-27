@@ -11,16 +11,18 @@ namespace Discord.Rest
     {
         public InteractionResponseType ResponseType { get; private set; }
         internal string Token { get; }
+        internal ulong ApplicationId { get; }
 
-        internal RestInteractionMessage(BaseDiscordClient discord, ulong id, IUser author, string token, IMessageChannel channel)
+        internal RestInteractionMessage(BaseDiscordClient discord, ulong id, IUser author, ulong applicationId, string token, IMessageChannel channel)
             : base(discord, id, channel, author, MessageSource.Bot)
         {
+            ApplicationId = applicationId;
             Token = token;
         }
 
-        internal static RestInteractionMessage Create(BaseDiscordClient discord, MessageModel model, string token, IMessageChannel channel)
+        internal static RestInteractionMessage Create(BaseDiscordClient discord, MessageModel model, ulong applicationId, string token, IMessageChannel channel)
         {
-            var entity = new RestInteractionMessage(discord, model.Id, model.Author.IsSpecified ? RestUser.Create(discord, model.Author.Value) : discord.CurrentUser, token, channel);
+            var entity = new RestInteractionMessage(discord, model.Id, model.Author.IsSpecified ? RestUser.Create(discord, model.Author.Value) : discord.CurrentUser, applicationId, token, channel);
             entity.Update(model);
             return entity;
         }
@@ -61,7 +63,7 @@ namespace Discord.Rest
         {
             try
             {
-                var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, Token, func, options).ConfigureAwait(false);
+                var model = await InteractionHelper.ModifyInteractionResponseAsync(Discord, ApplicationId, Token, func, options).ConfigureAwait(false);
                 Update(model);
             }
             catch (Net.HttpException x)
